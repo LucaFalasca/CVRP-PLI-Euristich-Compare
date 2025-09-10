@@ -41,7 +41,7 @@ ampl = AMPL()
 # Imposta Gurobi come solutore
 ampl.option['solver'] = 'gurobi'
 ampl.option['solver_msg'] = 1  # Mostra i messaggi del solver
-ampl.option['gurobi_options'] = 'MIPFocus=1 TimeLimit=300'  # Opzioni di Gurobi
+ampl.option['gurobi_options'] = 'MIPFocus=1 TimeLimit=7200'  # Opzioni di Gurobi
 ampl.option['time'] = 1  # Abilita il monitoraggio del tempo
 ampl.option['presolve'] = 0  # Abilita il presolve
 # Modifica la riga delle opzioni di Gurobi in questo modo:
@@ -72,14 +72,6 @@ ampl.param['dist'] = distanze
 print("Risoluzione del modello VRP con AMPL e Gurobi...")
 ampl.solve()
 
-print("\n--- DEBUG CON AMPL.DISPLAY ---")
-try:
-    ampl.display('Total_Distance.best_bound')
-    ampl.display('_solve_result_num') # Proviamo anche un altro suffisso
-except Exception as e:
-    print(f"Errore durante ampl.display: {e}")
-print("--- FINE DEBUG ---\n")
-
 # --- 5. Recupero e Visualizzazione dei Risultati ---
 solve_result = ampl.get_value('solve_result')
 print(f"Stato della soluzione: {solve_result}")
@@ -108,15 +100,15 @@ try:
 
     # Gap di ottimalità relativo
     # Nota: il valore è una frazione (es. 0.05 per 5%)
-    mip_gap = ampl.get_objective('Total_Distance').get('rel_mipgap')
-    if mip_gap is not None:
-        print(f"Gap di ottimalità: {mip_gap * 100:.4f}%")
+    # mip_gap = ampl.get_objective('Total_Distance').get('rel_mipgap')
+    # if mip_gap is not None:
+    #     print(f"Gap di ottimalità: {mip_gap * 100:.4f}%")
         
-    # Se il gap è molto piccolo o zero, possiamo considerarla ottima
-    if mip_gap is not None and mip_gap < 1e-6:
-        print("\nLa soluzione trovata è ottima!")
-    else:
-        print("\nLa soluzione potrebbe non essere ottima (interrotta da time limit o altro).")
+    # # Se il gap è molto piccolo o zero, possiamo considerarla ottima
+    # if mip_gap is not None and mip_gap < 1e-6:
+    #     print("\nLa soluzione trovata è ottima!")
+    # else:
+    #     print("\nLa soluzione potrebbe non essere ottima (interrotta da time limit o altro).")
 
 
     # --- Visualizzazione del percorso (se esiste una soluzione) ---

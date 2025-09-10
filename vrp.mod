@@ -1,48 +1,46 @@
-# --- INSIEMI ---
-set NODI;         # Insieme di tutti i nodi (deposito + clienti)
-set CLIENTI within NODI; # Sottoinsieme dei clienti
-set VEICOLI;      # Insieme dei veicoli
+# Numero clienti
+param N integer > 0;
 
-# --- PARAMETRI ---
-param num_clienti;
-param capacita_veicolo > 0;
-param deposito symbolic in NODI;
+# Insieme di tutti i nodi (0 è il deposito)
+set V := 0..N;
 
-param domanda{CLIENTI} >= 0; # Domanda per ogni cliente
-param dist{i in NODI, j in NODI} >= 0; # Matrice delle distanze
+# Insieme dei clienti (1..N)
+set Customers := 1..N;
 
-# --- VARIABILI DI DECISIONE ---
-var x{i in NODI, j in NODI, k in VEICOLI} binary; # 1 se il veicolo k va da i a j
-var u{i in CLIENTI, k in VEICOLI} >= 0; # Variabile ausiliaria per eliminare i sottotour
+# c[i,j] = costo per viaggiare dal nodo i al nodo j
+param c{V, V};
 
-suffix best_bound; # Miglior stima del limite inferiore (Lower Bound)
+# K = numero di veicoli disponibili
+param K integer > 0;
 
-# --- FUNZIONE OBIETTIVO ---
-minimize Total_Distance:
-    sum{i in NODI, j in NODI, k in VEICOLI: i != j} dist[i, j] * x[i, j, k];
+# d[i] = domanda del cliente i
+param d{Customers};
 
-# --- VINCOLI ---
-subject to VisitaCliente{j in CLIENTI}:
-    sum{i in NODI, k in VEICOLI: i != j} x[i, j, k] = 1;
+# Q = capacità di ogni veicolo
+param Q > 0;
 
-subject to ConservazioneFlusso{j in CLIENTI, k in VEICOLI}:
-    sum{i in NODI: i != j} x[i, j, k] - sum{i in NODI: i != j} x[j, i, k] = 0;
 
-subject to PartenzaDalDeposito{k in VEICOLI}:
-    sum{j in CLIENTI} x[deposito, j, k] <= 1;
+var x{V, V} binary;  # x[i,j] = 1 se l'arco (i,j) è usato nel percorso, 0 altrimenti
 
-subject to RitornoAlDeposito{k in VEICOLI}:
-    sum{j in CLIENTI} x[j, deposito, k] <= 1;
+# ==========================================================
+# OBJECTIVE FUNCTION
+# ==========================================================
 
-subject to CapacitaVeicolo{k in VEICOLI}:
-    sum{j in CLIENTI} domanda[j] * (sum{i in NODI: i != j} x[i, j, k]) <= capacita_veicolo;
+minimize Total_Cost:
+    sum{i in V, j in V} c[i,j] * x[i,j];
 
-# Vincoli di Miller-Tucker-Zemlin per l'eliminazione dei sottotour
-subject to LimiteInferioreU{i in CLIENTI, k in VEICOLI}:
-    u[i, k] >= domanda[i];
+# ==========================================================
+# CONSTRAINTS
+# ==========================================================
 
-subject to LimiteSuperioreU{i in CLIENTI, k in VEICOLI}:
-    u[i, k] <= capacita_veicolo;
+subject to Arrive_At_Customer {j in Customers}:
+    sum{i in V} x[i,j] = 1;
 
-subject to SubtourElimination{i in CLIENTI, j in CLIENTI, k in VEICOLI: i != j}:
-    u[i, k] - u[j, k] + capacita_veicolo * x[i, j, k] <= capacita_veicolo - domanda[j];
+subject to Leave_From_Customer {i in Customers}:
+    sum{j in V} x[i,j] = 1;
+
+subject to Arrive_At_Depot:
+    sum{i in V} x[i,0] = K;
+
+subject to Leave_From_Depot:
+    sum{j in V} x[0,j] = K;
