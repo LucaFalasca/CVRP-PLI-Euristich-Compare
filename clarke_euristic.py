@@ -105,7 +105,10 @@ if __name__ == "__main__":
     capacita = dati["capacita"]
     veicoli = int(dati["veicoli"])
     percorsi, costo_totale = clarke_wright_alg(clienti, distanze, domande, capacita, veicoli)
-    print("Percorsi finali:")
-    for percorso in percorsi:
-        print(percorso)
-    print(f"Costo totale: {costo_totale:.2f}")
+    if percorsi is None:
+        print("Non è possibile trovare una soluzione con il numero di veicoli disponibile.")
+    else:
+        print("Percorsi finali:")
+        for percorso in percorsi:
+            print(percorso)
+        print(f"Costo totale: {costo_totale:.2f}")
