@@ -67,16 +67,49 @@ def extract_data_from_vrp(file_input):
     
     return dati
 
+
+def extract_data_from_solution(file_input):
+    """
+    Estrae i dati da un file di soluzione e li salva in un dizionario
+
+    Args:
+        file_input (str): Il percorso del file di soluzione da leggere.
+    """
+    # 1. Inizializzazione delle strutture dati
+    dati = {
+        "costo_totale": 0,
+        "tours": []  # Lista di liste, ogni lista interna rappresenta un tour
+    }
+
+    print(f"📄 Inizio la lettura di '{file_input}'...")
+
+    with open(file_input, 'r') as f:
+        for linea in f:
+            linea = linea.strip() # Rimuove spazi e a capo extra
+
+            if not linea:
+                continue # Salta le righe vuote
+
+            if linea.startswith("Cost"):
+                dati["costo_totale"] = float(linea.split(' ')[1].strip())
+            elif linea.startswith("Route"):
+                # Estrae il tour come lista di interi
+                tour_str = linea.split(':')[1].strip()
+                tour = [int(nodo) for nodo in re.split(r'\s+', tour_str) if nodo.isdigit()]
+                dati["tours"].append(tour)
+    
+    return dati
+
 # --- Esecuzione dello script ---
 if __name__ == "__main__":
     # Nomi dei file. Modificali se necessario.
-    nome_file_vrp = "A/A-n32-k5.vrp"  
+    nome_file_vrp = "A/A-n32-k5.sol"  
 
     try:
-        dati = extract_data_from_vrp(nome_file_vrp)
+        dati = extract_data_from_solution(nome_file_vrp)
         print("✅ Estrazione completata con successo. Ecco i dati estratti:")
         print(dati)
     except FileNotFoundError:
         print(f"ERRORE: File non trovato. Assicurati che '{nome_file_vrp}' esista nella stessa cartella dello script.")
-    except Exception as e:
-        print(f"Si è verificato un errore inaspettato: {e}")
+    # except Exception as e:
+    #     print(f"Si è verificato un errore inaspettato: {e}")

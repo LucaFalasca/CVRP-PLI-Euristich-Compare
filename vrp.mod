@@ -52,4 +52,4 @@ subject to Bounds_Customers {(i,j) in E: i != 1 and j != 1}:
 # Gli archi che collegano il deposito possono essere usati al massimo due volte
 # (un veicolo parte e uno torna sullo stesso "canale" logico).
 subject to Bounds_Depot {(i,j) in E: i = 1 or j = 1}:
-    x[i,j] <= 1;
+    x[i,j] <= 2;

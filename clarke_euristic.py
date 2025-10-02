@@ -1,6 +1,6 @@
 
 from parser_dat_file import extract_data_from_vrp
-
+import time
 
 def capacity(path, domande):
     return sum(domande[node] for node in path if node != 1)
@@ -89,7 +89,7 @@ def clarke_wright_alg(clienti, distanze, domande, capacita, veicoli):
 
 if __name__ == "__main__":
     # Esempio di dati
-    file_data = 'A/A-n39-k5.vrp'
+    file_data = 'A/A-n80-k10.vrp'
 
     dati = extract_data_from_vrp(file_data)
 
@@ -104,7 +104,10 @@ if __name__ == "__main__":
     domande = dati["domande"]
     capacita = dati["capacita"]
     veicoli = int(dati["veicoli"])
+    start = time.time()
     percorsi, costo_totale = clarke_wright_alg(clienti, distanze, domande, capacita, veicoli)
+    end = time.time()
+    print(f"Tempo di esecuzione: {end - start:.2f} secondi")
     if percorsi is None:
         print("Non è possibile trovare una soluzione con il numero di veicoli disponibile.")
     else:

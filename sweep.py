@@ -2,6 +2,7 @@ from math import atan2
 
 from parser_dat_file import extract_data_from_vrp
 from clarke_euristic import capacity
+import time
 
 def sweep_algorithm(clienti, coordinate, distanze, domande, capacita, veicoli):
     # Ordina i clienti in senso orario rispetto al deposito (nodo 1)
@@ -53,7 +54,7 @@ def sweep_algorithm(clienti, coordinate, distanze, domande, capacita, veicoli):
 
 if __name__ == "__main__":
     # Esempio di dati
-    file_data = 'A/A-n39-k5.vrp'
+    file_data = 'A/A-n80-k10.vrp'
 
     dati = extract_data_from_vrp(file_data)
 
@@ -69,7 +70,10 @@ if __name__ == "__main__":
     coordinate = dati["coordinate"]
     capacita = dati["capacita"]
     veicoli = int(dati["veicoli"])
+    start = time.time()
     percorsi, costo_totale = sweep_algorithm(clienti, coordinate, distanze, domande, capacita, veicoli)
+    end = time.time()
+    print(f"Tempo di esecuzione: {end - start:.2f} secondi")
     if percorsi is None:
         print("Non è possibile trovare una soluzione con il numero di veicoli disponibile.")
     else:

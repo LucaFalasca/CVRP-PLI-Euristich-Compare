@@ -1,4 +1,5 @@
 from parser_dat_file import extract_data_from_vrp
+import time
 
 
 def my_euristich(clienti, distanze, domande, capacita, veicoli):
@@ -50,7 +51,7 @@ def my_euristich(clienti, distanze, domande, capacita, veicoli):
 
 if __name__ == "__main__":
     # Esempio di dati
-    file_data = 'A/A-n69-k9.vrp'
+    file_data = 'A/A-n80-k10.vrp'
 
     dati = extract_data_from_vrp(file_data)
 
@@ -65,8 +66,10 @@ if __name__ == "__main__":
     domande = dati["domande"]
     capacita = dati["capacita"]
     veicoli = int(dati["veicoli"])
+    start = time.time()
     percorsi = my_euristich(clienti, distanze, domande, capacita, veicoli)
-
+    end = time.time()
+    print(f"Tempo di esecuzione: {end - start:.2f} secondi")
     costo_totale = 0
     for path in percorsi:
         costo_path = 0
