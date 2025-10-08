@@ -5,6 +5,8 @@ import networkx as nx
 import itertools
 import matplotlib.pyplot as plt
 import time
+from clarke_euristic import capacity
+import bisect
 
 from parser_dat_file import extract_data_from_vrp
 
@@ -16,39 +18,6 @@ def show_graph(g):
     #plt.show()
     # salvo il grafo con il timestamp
     plt.savefig(f"graph/{time.time()}.png")
-
-
-
-
-def find_violated_gsecs2(x_solution, clienti, domande, capacita):
-    violated_tours = set()
-
-    G = nx.Graph()
-    for (i, j), val in x_solution.items():
-        if val > 0: # Considera solo archi con flusso non nullo
-            G.add_edge(i, j, capacity=val)
-
-    show_graph(G)
-
-    components = list(nx.connected_components(G))
-    print(f"DEBUG: Numero di componenti connesse: {len(components)}")
-
-
-    if len(components) == 1:
-        print("Tutti i nodi sono connessi. Nessun sottotour trovato.")
-        return []
-
-    for S in components:
-        print(f"DEBUG: Analizzando componente connessa S = {S}")
-        if len(S) < 2:
-            continue
-
-        if 1 not in S:
-            print("Sottotour non collegato al deposito trovato:", S)
-            violated_tours.add(frozenset(S))
-    
-    return list(violated_tours)
-
 
 
 def find_violated_gsecs(x_solution, clienti, domande, capacita):
@@ -108,11 +77,149 @@ def find_violated_gsecs(x_solution, clienti, domande, capacita):
                 if edge in x_solution:
                     lhs += x_solution[edge]
 
-        if lhs > rhs + 1e-6:
+        if lhs > rhs + 0.01:
             violated_sets.append(frozenset(S_partition))
 
     # Rimuovi duplicati e restituisci
     return list(set(violated_sets))
+
+def find_violated_gsecs2(x_solution, clienti, domande, capacita):
+    violated_tours = set()
+
+    G = nx.Graph()
+    for (i, j), val in x_solution.items():
+        if val > 0: # Considera solo archi con flusso non nullo
+            G.add_edge(i, j, capacity=val)
+
+    show_graph(G)
+
+    components = list(nx.connected_components(G))
+    print(f"DEBUG: Numero di componenti connesse: {len(components)}")
+
+
+    if len(components) == 1:
+        print("Tutti i nodi sono connessi. Nessun sottotour trovato.")
+        return []
+
+    for S in components:
+        print(f"DEBUG: Analizzando componente connessa S = {S}")
+        if len(S) < 2:
+            continue
+
+        if 1 not in S:
+            print("Sottotour non collegato al deposito trovato:", S)
+            violated_tours.add(frozenset(S))
+    
+    return list(violated_tours)
+
+def build_path_from_solution3(soluzione_x, domande, capacita, deposito=1):
+    successors = {i : j for (i, j), val in soluzione_x.items() if val > 1e-6}
+    
+    visited = set()
+    partenze = [k for k, v in successors.items() if k == deposito or v == deposito]
+
+    for partenza in partenze:
+        if partenza in visited:
+            continue
+        percorso = [deposito]
+        carico = 0
+        nodo_corrente = deposito
+        while nodo_corrente != deposito:
+            if nodo_corrente in visited:
+                break
+            visited.add(nodo_corrente)
+            percorso.append(nodo_corrente)
+            carico += domande[nodo_corrente]
+
+            if carico > capacita:
+                print(f"Attenzione: Capacità del veicolo superata nel percorso {percorso}: {carico} > {capacita}")
+                break
+
+
+
+def build_path_from_solution2(soluzione_x, domande, capacita, deposito=1):
+    G = nx.Graph()
+    for (i, j), val in soluzione_x.items():
+        if val > 1e-6 and i != deposito and j != deposito: # Considera solo archi con flusso non nullo
+            G.add_edge(i, j, capacity=val)
+
+    #show_graph(G)
+
+    components = list(nx.connected_components(G))
+
+    print(f"DEBUG: Componenti connesse trovate: {components}")
+    violated_set = []
+    for path in components:
+        capacity = 0
+        sub_path = []
+        for n in path:
+            sub_path.append(n)
+            capacity += domande[n]
+            if capacity > capacita:
+                violated_set.append(frozenset(path))
+                break
+            
+
+    return list(components), list(violated_set)
+
+def build_path_from_solution5(soluzione_x, domande, capacita, deposito=1):
+    G = nx.Graph()
+    for (i, j), val in soluzione_x.items():
+        if val > 1e-6 and i != deposito and j != deposito: # Considera solo archi con flusso non nullo
+            G.add_edge(i, j, capacity=val)
+
+    #show_graph(G)
+
+    components = list(nx.connected_components(G))
+
+    print(f"DEBUG: Componenti connesse trovate: {components}")
+    violated_set = []
+    for path in components:
+        # genero tutti i subpath che violano la capacità
+        violated_set += generate_subpaths(list(path), domande, capacita)
+
+    return list(components), list(violated_set)
+
+def generate_subpaths(path, domande, capacita):
+    violated_set = []
+    sub_path = []
+    capacity = 0
+    for n in path:
+        sub_path.append(n)
+        capacity += domande[n]
+        if capacity > capacita:
+            if len(path) > 1:
+                violated_set += generate_subpaths(path[1:], domande, capacita)
+            violated_set += [frozenset(sub_path)]
+    return violated_set
+
+def build_path_from_solution4(soluzione_x, domande, capacita, deposito=1):
+    G = nx.Graph()
+    for (i, j), val in soluzione_x.items():
+        if val > 1e-6 and i != deposito and j != deposito: # Considera solo archi con flusso non nullo
+            G.add_edge(i, j, capacity=val)
+
+    #show_graph(G)
+
+    components = list(nx.connected_components(G))
+
+    print(f"DEBUG: Componenti connesse trovate: {components}")
+    violated_set = []
+    for path in components:
+        capacity = 0
+        sub_path = []
+        for n in path:
+            sub_path.append(n)
+            capacity += domande[n]
+            if capacity > capacita:
+                violated_set.append(frozenset(sub_path))
+                break
+            
+
+    return list(components), list(violated_set)
+
+    
+
 
 def build_path_from_solution(soluzione_x, deposito=1):
     """
@@ -166,7 +273,7 @@ def build_path_from_solution(soluzione_x, deposito=1):
         while nodo_corrente != deposito:
             if not any(nodo_corrente in arco for arco in archi_attivi):
                 print(f"Attenzione: Nodo {nodo_corrente} non ha un arco successivo. Percorso incompleto.")
-                percorsi_finali.append(percorso_attuale)
+                percorsi_finali.append((percorso_attuale, False))
                 break 
             tuple_compatibili = [arco for arco in archi_attivi if nodo_corrente in arco]
             for arco in tuple_compatibili:
@@ -266,63 +373,204 @@ ampl.param['c'] = distanze
 
 # --- 4. Risoluzione del Modello ---
 print("Risoluzione del modello VRP con AMPL e Gurobi...")
+start = time.time()
 iteration = 0
 while(True):
-    iteration += 1
+    end = time.time()
+    if end - start > 300:
+        print("Timeout di 300 secondi raggiunto. Interrompo.")
+        break
+    ampl.option['relax_integrality'] = 1
+    while(True):
+        iteration += 1
+        ampl.solve()
+
+        # --- 5. Recupero e Visualizzazione dei Risultati ---
+        solve_result = ampl.get_value('solve_result')
+        print(f"Stato della soluzione: {solve_result}")
+
+        if solve_result == 'infeasible':
+            print("Il modello è risultato INFEASIBILE. Interrompo.")
+            break
+
+        try:
+            solve_time = ampl.get_value('_solve_time')
+            print(f"DEBUG: Tempo di risoluzione recuperato con successo: {solve_time:.4f} secondi")
+        except Exception as e:
+            print(f"DEBUG: IMPOSSIBILE recuperare _solve_time. Errore: {e}")
+
+
+        # Prova a recuperare i valori. Se non è stata trovata nemmeno una soluzione
+        # ammissibile, questo blocco potrebbe generare un'eccezione.
+        
+        # Valore della migliore soluzione trovata (Upper Bound)
+        distanza_trovata = ampl.get_objective('Total_Cost').value()
+        print(f"Migliore soluzione trovata (costo totale): {distanza_trovata:.2f}")
+
+        # --- Visualizzazione del percorso (se esiste una soluzione) ---
+        print("\nRecupero dei percorsi per la visualizzazione...")
+        x = ampl.get_variable('x').get_values().to_dict()
+
+        print(x)
+
+        # paths = build_path_from_solution(x)
+        # print(f"Percorsi trovati per i veicoli:")
+        # for idx, path in enumerate(paths):
+        #     print(f"  Veicolo {idx + 1}: {path[0]}")
+
+        violated_gsecs = find_violated_gsecs2(x, dati["coordinate"].keys(), dati["domande"], dati["capacita"])
+
+        print(f"Trovati {len(violated_gsecs)} vincoli GSEC violati:")
+        for s in violated_gsecs:
+            print(f"  Set S violato: {set(s)}")
+            #scrivo su log
+            with open("log_gsec", "a") as file:
+                file.write(str(list(s)) + "\n")
+
+
+        # print(f"paths {paths}")
+        # for path in paths:
+        #     if path[1]:
+        #         print(f"Percorso che viola capacità: {path[0]}")
+        #         violated_gsecs.append(frozenset(path[0]))
+        #         print(f"  Aggiunto vincolo GSEC per percorso che viola capacità: {set(path[0])}")
+        #         with open("log_gsec", "a") as file:
+        #             file.write(str(list(path[0])) + "\n")
+
+        #Inserisco i nuovi vincoli GSEC
+        if not violated_gsecs:
+            print("soluzione ottima rilassata trovata")
+            print("Domande clienti:", dati["domande"])
+            print("Distanze:", distanze)
+            break
+
+        
+
+        for set_S in violated_gsecs:
+            S = list(set_S)
+
+            demand_S = sum(dati["domande"][k] for k in S)
+            gamma_S = (demand_S + dati["capacita"] - 1) // dati["capacita"]
+            rhs = len(S) - gamma_S
+
+            #Costruisci il lato sinistro del vincolo come stringa
+            # Usiamo tuple ordinate per coerenza con il modello
+            lhs_parts = [f"x[{i},{j}]" for i, j in itertools.combinations(sorted(S), 2)]
+            lhs_string = " + ".join(lhs_parts)
+
+            # Crea un nome univoco per il nuovo vincolo
+            #nome_vincolo = f"GSEC_cut_{iteration}_{'_'.join(map(str, sorted(S)))}"
+            nome_vincolo = f"GSEC_cut{'_'.join(map(str, sorted(S)))}"
+            
+            # Costruisci il comando AMPL completo
+            comando_ampl = f"subject to {nome_vincolo}: {lhs_string} <= {rhs};"
+            
+            print(f"Aggiungo: {comando_ampl}")
+            
+            # 6. Esegui il comando per aggiungere dinamicamente il vincolo
+            ampl.eval(comando_ampl)
+        
+    # Ultima iterazione con i vincoli di interezza
+    ampl.option['relax_integrality'] = 0
     ampl.solve()
 
-    # --- 5. Recupero e Visualizzazione dei Risultati ---
-    solve_result = ampl.get_value('solve_result')
-    print(f"Stato della soluzione: {solve_result}")
-
-    if solve_result == 'infeasible':
-        print("Il modello è risultato INFEASIBILE. Interrompo.")
-        break
-
-    try:
-        solve_time = ampl.get_value('_solve_time')
-        print(f"DEBUG: Tempo di risoluzione recuperato con successo: {solve_time:.4f} secondi")
-    except Exception as e:
-        print(f"DEBUG: IMPOSSIBILE recuperare _solve_time. Errore: {e}")
-
-
-    # Prova a recuperare i valori. Se non è stata trovata nemmeno una soluzione
-    # ammissibile, questo blocco potrebbe generare un'eccezione.
-    
-    # Valore della migliore soluzione trovata (Upper Bound)
-    distanza_trovata = ampl.get_objective('Total_Cost').value()
-    print(f"Migliore soluzione trovata (costo totale): {distanza_trovata:.2f}")
-
-    # --- Visualizzazione del percorso (se esiste una soluzione) ---
-    print("\nRecupero dei percorsi per la visualizzazione...")
     x = ampl.get_variable('x').get_values().to_dict()
 
-    print(x)
+    paths, violated_gsecs = build_path_from_solution2(x, dati["domande"], dati["capacita"])
 
-    paths = build_path_from_solution(x)
-    print(f"Percorsi trovati per i veicoli:")
+    #print(f"path:{paths}")
+    print(f"violated_gsecs:{violated_gsecs}")
+
+    print("x values:", x)
+
+    print(f"Percorsi trovati per i veicoli (soluzione intera):{paths}")
     for idx, path in enumerate(paths):
-        print(f"  Veicolo {idx + 1}: {path[0]}")
+        #capacity_used = capacity(path[0], dati["domande"])
+        print(f"  Veicolo {idx + 1}: {path}") 
 
-    violated_gsecs = find_violated_gsecs2(x, dati["coordinate"].keys(), dati["domande"], dati["capacita"])
-
-    print(f"Trovati {len(violated_gsecs)} vincoli GSEC violati:")
+    violated_gsecs += find_violated_gsecs2(x, dati["coordinate"].keys(), dati["domande"], dati["capacita"])
+    print(f"violated_gsecs after second check:{violated_gsecs}")
+    violated_gsecs = list(set(violated_gsecs))  # Rimuovi duplicati
+    print(f"Trovati {len(violated_gsecs)} vincoli GSEC capacità violati:")
     for s in violated_gsecs:
         print(f"  Set S violato: {set(s)}")
+        #scrivo su log
+        with open("log_gsec", "a") as file:
+            file.write(str(list(s)) + "\n")
 
-    for path in paths:
-       if path[1]:
-           violated_gsecs.append(frozenset(path[0]))
-           print(f"  Aggiunto vincolo GSEC per percorso che viola capacità: {set(path[0])}")
+    # print(f"VIolated gsecs: {violated_gsecs2}")
+    # for set_S in violated_gsecs2:
+    #         print(f"Set S violato: {set(set_S)}")
+    #         with open("log_gsec", "a") as file:
+    #             file.write(str(list(set_S)) + "\n")
 
-    #Inserisco i nuovi vincoli GSEC
-    if not violated_gsecs:
-        print("soluzione ottima trovata")
+
+    # print(f"paths {paths}")
+    # for path in paths:
+    #     if path[1]:
+    #         print(f"Percorso che viola capacità: {path[0]}")
+    #         #violated_gsecs.append(frozenset(path[0]))
+    #         print(f"  Aggiunto vincolo GSEC per percorso che viola capacità: {set(path[0])}")
+    #         with open("log_gsec", "a") as file:
+    #             file.write(str(list(path[0])) + "\n")
+
+    if not violated_gsecs: #and not violated_gsecs2:
+        print("soluzione ottima intera trovata")
         print("Domande clienti:", dati["domande"])
         print("Distanze:", distanze)
+        end = time.time()
+        print(f"Tempo totale di esecuzione: {end - start:.2f} secondi")
+        for idx, path in enumerate(paths):
+            capacity_used = capacity(path, dati["domande"])
+            print(f"  Veicolo {idx + 1}: {path} (Capacità usata: {capacity_used}/{dati['capacita']})") 
+
+        # Calcolo costo totale
+        total_cost = 0
+        for path in paths:
+            for i in range(len(path) - 1):
+                path_list = list(path)
+                total_cost += distanze[path_list[i], path_list[i + 1]] if path_list[i] < path_list[i + 1] else distanze[path_list[i + 1], path_list[i]]
+        print(f"Costo totale calcolato dei percorsi: {total_cost:.2f}")
         break
 
-    
+    print(f"VIolated gsecs: {violated_gsecs}")
+
+    # for set_S in violated_gsecs:
+    #         S = list(set_S[0])
+    #         super_S = list(set_S[1])
+
+    #         print(f"Adding GSEC for S={S} with super_S={super_S}")
+
+    #         demand_S = sum(dati["domande"][k] for k in S)
+    #         gamma_S = (demand_S + dati["capacita"] - 1) // dati["capacita"]
+    #         rhs = len(S) - gamma_S
+
+    #         #Costruisci il lato sinistro del vincolo come stringa
+    #         # Usiamo tuple ordinate per coerenza con il modello
+    #         subtracted_S = list(set(super_S) - set(S))
+
+    #         # combs = []
+    #         # for i in S:
+    #         #     for j in subtracted_S:
+    #         #         if i < j:
+    #         #             combs.append((i, j))
+    #         #         elif j < i:
+    #         #             combs.append((j, i))
+    #         combs = list(itertools.combinations(sorted(super_S), 2))
+    #         lhs_parts = [f"x[{i},{j}]" for i, j in combs]
+    #         lhs_string = " + ".join(lhs_parts)
+                
+
+    #         # Crea un nome univoco per il nuovo vincolo
+    #         nome_vincolo = f"GSEC_cut_{iteration}_{'_'.join(map(str, sorted(S)))}"
+            
+    #         # Costruisci il comando AMPL completo
+    #         comando_ampl = f"subject to {nome_vincolo}: {lhs_string} <= {rhs};"
+            
+    #         print(f"Aggiungo: {comando_ampl}")
+            
+    #         # 6. Esegui il comando per aggiungere dinamicamente il vincolo
+    #         ampl.eval(comando_ampl)
 
     for set_S in violated_gsecs:
         S = list(set_S)
@@ -333,10 +581,12 @@ while(True):
 
         #Costruisci il lato sinistro del vincolo come stringa
         # Usiamo tuple ordinate per coerenza con il modello
+        
         lhs_parts = [f"x[{i},{j}]" for i, j in itertools.combinations(sorted(S), 2)]
         lhs_string = " + ".join(lhs_parts)
 
         # Crea un nome univoco per il nuovo vincolo
+        #nome_vincolo = f"GSEC_cut_{iteration}_{'_'.join(map(str, sorted(S)))}"
         nome_vincolo = f"GSEC_cut_{iteration}_{'_'.join(map(str, sorted(S)))}"
         
         # Costruisci il comando AMPL completo
@@ -346,17 +596,8 @@ while(True):
         
         # 6. Esegui il comando per aggiungere dinamicamente il vincolo
         ampl.eval(comando_ampl)
-    
-    # (Qui puoi inserire il tuo codice per la visualizzazione con matplotlib)
-    # Esempio di stampa dei percorsi:
-    # percorsi = {k: [] for k in range(1, int(dati["veicoli"]) + 1)}
-    # for (i, j, k), val in x.items():
-    #     if val > 0.5: # Se l'arco (i,j) è usato dal veicolo k
-    #         percorsi[k].append((i, j))
-    
-    # for k, archi in percorsi.items():
-    #     if archi: # Stampa solo se il veicolo è usato
-    #         print(f"Percorso Veicolo {k}: {archi}")
+        
+
 
 
 

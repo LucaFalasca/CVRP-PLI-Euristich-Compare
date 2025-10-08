@@ -87,7 +87,7 @@ def find_tour(x_solution):
             elif j == 1:
                 starting_nodes.append(i)
     G.remove_node(1)
-    show_graph(G)
+    #show_graph(G)
     tours = []
     logging.debug("starting_nodes:", starting_nodes)
     for start in starting_nodes:
@@ -99,16 +99,19 @@ def find_tour(x_solution):
 
 if __name__ == "__main__":
     # Configurazione del logging, tolgo il debug
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    max_processing_time = 1  # secondi
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+    max_processing_time = 300  # secondi
     dir_path = "A/"
     pattern = os.path.join(dir_path, "*.vrp")
     all_files = glob.glob(pattern)
     # ordino i file per nome
     all_files.sort()
     result_file = "mip-results.csv"
+    # Inserisco l'header nel file dei risultati
+    #with open(result_file, "w") as f:
+    #    f.write("Method,Instance,N,K,Q,Lower_Bound,Optimal_Value,Optimality_Gap(%),Processing_Time(s)\n")
 
-    for file_data in all_files:
+    for file_data in all_files[26:]:
         logging.info(f"Elaborazione del file: {file_data} in corso...")
         dati = extract_data_from_vrp(file_data)
 
@@ -137,10 +140,10 @@ if __name__ == "__main__":
         # --- 4. Risoluzione del Modello ---
         logging.debug("Risoluzione del modello VRP con AMPL e Gurobi...")
         processing_time = 0
-        start = time.time()
+        start = time.perf_counter()
         iteration = 0
         while(True):
-            end = time.time()
+            end = time.perf_counter()
             processing_time = end - start
             if processing_time >= max_processing_time:
                 logging.debug("Timeout di 10 secondi raggiunto. Interrompo.")
@@ -193,7 +196,7 @@ if __name__ == "__main__":
                 logging.debug("Nessun sottotour trovato. Soluzione ottimale raggiunta.")
                 logging.debug("Domande clienti:", dati["domande"])
                 logging.debug("Distanze:", distanze)
-                end = time.time()
+                end = time.perf_counter()
                 processing_time = round(end - start, 0)
                 logging.debug(f"Tempo totale di esecuzione: {processing_time:.2f} secondi")
                 for idx, path in enumerate(tours):
@@ -210,7 +213,7 @@ if __name__ == "__main__":
                 logging.debug(f"Distanza totale della soluzione AMPL: {distanza_trovata:.2f}")
                 break
 
-            for set_S in violated_constraints:
+            for index, set_S in enumerate(violated_constraints):
                 S = list(set_S)
 
                 demand_S = sum(dati["domande"][k] for k in S)
@@ -225,7 +228,7 @@ if __name__ == "__main__":
 
                 # Crea un nome univoco per il nuovo vincolo
                 #nome_vincolo = f"GSEC_cut_{iteration}_{'_'.join(map(str, sorted(S)))}"
-                nome_vincolo = f"GSEC_cut_{'_'.join(map(str, sorted(S)))}"
+                nome_vincolo = f"GSEC_cut_{iteration}_{index}{'_'.join(map(str, sorted(S)))[:10]}"
                 
                 # Costruisci il comando AMPL completo
                 comando_ampl = f"subject to {nome_vincolo}: {lhs_string} <= {rhs};"
@@ -235,7 +238,7 @@ if __name__ == "__main__":
                 # 6. Esegui il comando per aggiungere dinamicamente il vincolo
                 ampl.eval(comando_ampl)
         instance = file_data.split('/')[-1].replace('.vrp', '')
-        n = dati["clienti"]
+        n = dati["clienti"] - 1
         k = dati["veicoli"]
         q = dati["capacita"]
         low_bound = distanza_trovata
@@ -246,7 +249,7 @@ if __name__ == "__main__":
         logging.debug(f"Optimality flag from solution file: {opt}")
         optimal_gap = round((opt - low_bound) / opt * 100, 2) if opt != 0 else 0
         logging.debug(f"Optimality gap: {optimal_gap:.4f}")
-        result = f"{"MIP"},{instance},{n},{k},{q},{low_bound},{opt},{optimal_gap},{processing_time}\n"
+        result = f"{"MIP"},{instance},{n},{k},{q},{low_bound},{opt},{optimal_gap},{processing_time:.6f}\n"
         with open(result_file, "a") as f:
             f.write(f"{result}")
 
