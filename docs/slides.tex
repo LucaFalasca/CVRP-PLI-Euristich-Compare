@@ -70,32 +70,155 @@
 \subsection{Euristiche}
 
 \subsubsection{Clarke and Wright}
-
+    
 \begin{frame}{\subsubsecname}
+    \begin{itemize}
+        \item Euristica di risparmio (savings)
+        \item Calcolo del risparmio per ogni coppia di nodi
+        \item Ordinamento decrescente dei risparmi
+        \item Unione dei percorsi basata sui risparmi
+    \end{itemize}
+
 \end{frame}
 
 \subsubsection{Sweep}
-
 \begin{frame}{\subsubsecname}
+    \begin{itemize}
+        \item Ordinamento dei nodi in base all'angolo polare rispetto al deposito
+        \item Creazione di percorsi sequenziali fino al raggiungimento della capacità del veicolo
+    \end{itemize}
+    \hfill
+    \begin{minipage}{0.49\textwidth}
+		\centering
+		\includegraphics[width=0.8\linewidth]{images/sweep1.png}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.49\textwidth}
+		\centering
+		\includegraphics[width=0.8\linewidth]{images/sweep2.png}
+	\end{minipage}
 \end{frame}
 
 \subsubsection{My euristich}
 \begin{frame}{\subsubsecname}
-    \begin{itemize}
+    
+    \begin{minipage}{0.49\textwidth}
+        \begin{itemize}
         \item Variante del Nearest Neighbor
         \item Nodi vicini agli estremi
         \item Aggiunta iterativa di nodi al percorso
     \end{itemize}
+    \end{minipage}
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \includegraphics[width=0.8\linewidth]{images/my_euristich.png}
+    \end{minipage}
 \end{frame}
 
 \section{Risultati}
 
 \subsection{Augerat 1995}
 \begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=0.75\linewidth]{images/MIP.png}
+        \end{minipage}
+    \end{center}
 \end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=1\linewidth]{images/N_gap.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=1\linewidth]{images/K_gap.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=1\linewidth]{images/N_time.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=1\linewidth]{images/N_gap_over_time.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=1\linewidth]{images/boxplot_gap.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
 
 \subsection{XML100 2021}
 \begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=0.8\linewidth]{images/xml100_gap.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=0.8\linewidth]{images/xml100_kgap.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=0.8\linewidth]{images/xml100_time.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\subsecname}
+    \begin{center}
+		\begin{minipage}{1\textwidth}
+            \centering
+            \includegraphics[width=1\linewidth]{images/xml100_boxplot.png}
+        \end{minipage}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Grazie per l'attenzione!}
+	\begin{Huge}
+		Domande?
+	\end{Huge} 
+	\\ \\
+	Il codice è disponibile al seguente repository: \url{https://github.com/LucaFalasca/CVRP-PLI-Euristich-Compare}
+	\\ \\
+	
 \end{frame}
 
 \end{document}
