@@ -1,0 +1,101 @@
+\documentclass[compress]{beamer}
+\usepackage[
+    title={CVRP: MIP and Euristic comparison},
+    subtitle={Confronto tra modelli MIP e euristiche per il CVRP},
+    event={Progetto fine corso AMOD},
+    author={L. Falasca},
+    longauthor={Luca Falasca},
+    email={luca.falasca@students.uniroma2.eu},
+    institute={Tor Vergata},
+    longinstitute={Università degli Studi di Roma Tor Vergata},
+]{unislides}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{minted}
+\usepackage{algorithm}
+\usepackage{hyperref}
+\usepackage{adjustbox}
+\usepackage{svg}
+%\svgsetup{inkscapelatex=false}
+
+\begin{document}
+
+\begin{frame}[plain]
+	\titlepage
+\end{frame}
+\section{Introduzione}
+
+\subsection{Obiettivi}
+\begin{frame}{\subsecname}
+    L'obiettivo di questo progetto è confrontare le prestazioni di un modello MIP e di alcune euristiche per la risoluzione del problema del Vehicle Routing Problem con capacità (CVRP).
+
+    \begin{itemize}
+        \item Implementazione di un modello MIP per il CVRP
+        \item Implementazione di alcune euristiche per il CVRP
+        \item Confronto delle prestazioni in termini di qualità della soluzione e tempo di esecuzione
+    \end{itemize}
+\end{frame}
+
+\subsection{Dati e risorse tecniche}
+\begin{frame}{\subsecname}
+    \begin{itemize}
+        \item Dati: set di benchmark Augerat 1995 e XML100 2021
+        \item Software: Python (amplpy), AMPL, Gurobi
+        \item Hardware: AMD Ryzen 5 7530U (6 core / 12 threads), 16 GB RAM
+    \end{itemize}
+\end{frame}
+
+\section{Metodologia e Algoritmi}
+
+\begin{frame}{Metodologia}
+    \begin{itemize}
+        \item Limite di tempo di 5 minuti (300 secondi) per ogni esecuzione
+        \item Lower bound per il modello MIP
+        \item Valutazione della distanza dalla soluzione ottima (Optimality Gap)
+    \end{itemize}
+\end{frame}
+
+\subsection{Modello MIP}
+\begin{frame}{\subsecname}
+    \begin{itemize}
+        \item Modello MIP b-matching relax (Miller 1995)
+        \item Iterazione del modello MIP con aggiunta dinamica di vincoli fino alla soluzione ottima o al limite di tempo.
+        \begin{itemize}
+            \item Vincoli di sottociclo (subtour elimination constraints) 
+            \item Vincoli di capacità (capacity constraints)
+        \end{itemize}
+        \item Uso di euristiche con grafi per trovare i vincoli dalla soluzione intermedia.
+    \end{itemize}
+\end{frame}
+
+\subsection{Euristiche}
+
+\subsubsection{Clarke and Wright}
+
+\begin{frame}{\subsubsecname}
+\end{frame}
+
+\subsubsection{Sweep}
+
+\begin{frame}{\subsubsecname}
+\end{frame}
+
+\subsubsection{My euristich}
+\begin{frame}{\subsubsecname}
+    \begin{itemize}
+        \item Variante del Nearest Neighbor
+        \item Nodi vicini agli estremi
+        \item Aggiunta iterativa di nodi al percorso
+    \end{itemize}
+\end{frame}
+
+\section{Risultati}
+
+\subsection{Augerat 1995}
+\begin{frame}{\subsecname}
+\end{frame}
+
+\subsection{XML100 2021}
+\begin{frame}{\subsecname}
+\end{frame}
+
+\end{document}

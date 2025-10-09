@@ -2,8 +2,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
-from clarke_euristic import capacity
-from parser_dat_file import extract_data_from_vrp
+from solvers.clarke_euristic import capacity
+from utils.parser_dat_file import extract_data_from_vrp
 from amplpy import AMPL
 import time
 import itertools
@@ -101,12 +101,12 @@ if __name__ == "__main__":
     # Configurazione del logging, tolgo il debug
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
     max_processing_time = 300  # secondi
-    dir_path = "A/"
+    dir_path = "../benchmarks/A/"
     pattern = os.path.join(dir_path, "*.vrp")
     all_files = glob.glob(pattern)
     # ordino i file per nome
     all_files.sort()
-    result_file = "mip-results.csv"
+    result_file = "results/mip-results.csv"
     # Inserisco l'header nel file dei risultati
     #with open(result_file, "w") as f:
     #    f.write("Method,Instance,N,K,Q,Lower_Bound,Optimal_Value,Optimality_Gap(%),Processing_Time(s)\n")

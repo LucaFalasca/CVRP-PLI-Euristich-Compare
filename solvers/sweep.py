@@ -1,6 +1,6 @@
 from math import atan2
 
-from parser_dat_file import extract_data_from_vrp, extract_data_from_vrp2
+from utils.parser_dat_file import extract_data_from_vrp, extract_data_from_vrp2
 from clarke_euristic import capacity
 import time
 import logging
@@ -58,19 +58,20 @@ def sweep_algorithm(clienti, coordinate, distanze, domande, capacita, veicoli):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     max_processing_time = 300  # secondi
-    dir_path = "A/"
+    num_experiments = 3
+    dir_path = "benchmarks/Vrp-Set-XML100/instances/"
     pattern = os.path.join(dir_path, "*.vrp")
     all_files = glob.glob(pattern)
     # ordino i file per nome
     all_files.sort()
-    result_file = "sweep-results.csv"
+    result_file = "results/sweep-results-XML100.csv"
     with open(result_file, "w") as f:
-        f.write("Method,Instance,N,K,Q,Cost,Optimal_Value,Optimality_Gap(%),Processing_Time(s)\n")
+        f.write("Method,Instance,N,Optimal_K,Euristich_K,Q,Cost,Optimal_Value,Optimality_Gap(%),Optimality_K_Gap(%),Processing_Time(s)\n")
     # Esempio di dati
     for file_data in all_files:
         logging.info(f"Elaborazione del file: {file_data} in corso...")
 
-        dati = extract_data_from_vrp(file_data)
+        dati = extract_data_from_vrp2(file_data)
     
 
         # for k in list(dati["coordinate"].keys())[-20:]:
@@ -85,16 +86,23 @@ if __name__ == "__main__":
         coordinate = dati["coordinate"]
         capacita = dati["capacita"]
         veicoli = int(dati["veicoli"])
-        start = time.perf_counter()
-        percorsi, costo_totale = sweep_algorithm(clienti, coordinate, distanze, domande, capacita, veicoli)
-        end = time.perf_counter()
-        solution_file = file_data.replace('.vrp', '.sol')#.replace('instances', 'solutions')
+        sum_time = 0
+        for _ in range(num_experiments):
+            start = time.perf_counter()
+            percorsi, costo_totale = sweep_algorithm(clienti, coordinate, distanze, domande, capacita, veicoli)
+            end = time.perf_counter()
+            sum_time = end - start
+        avg_time = sum_time / num_experiments
+        solution_file = file_data.replace('.vrp', '.sol').replace('instances', 'solutions')
         with open(solution_file, "r") as f:
             lines = f.readlines()
             opt = float(lines[-1].strip().split()[-1])  # Ultima riga, ultima parola
+            opt_k = len(lines) - 1
+        euristich_k = len(percorsi)
+        optimal_k_gap = round(abs(opt_k - euristich_k) / opt_k * 100, 2) if opt_k != 0 and euristich_k is not None else None
         logging.debug(f"Optimality flag from solution file: {opt}")
         optimal_gap = round(abs(opt - costo_totale) / opt * 100, 2) if opt != 0 and costo_totale is not None else None
-        result = f"{"Sweep"},{file_data.split('/')[-1].replace('.vrp', '')},{dati['clienti'] - 1},{veicoli},{capacita},{costo_totale if percorsi else None},{opt},{optimal_gap},{end - start:.6f}\n"
+        result = f"{"Sweep"},{file_data.split('/')[-1].replace('.vrp', '')},{dati['clienti'] - 1},{opt_k},{euristich_k},{capacita},{costo_totale if percorsi else None},{opt},{optimal_gap},{optimal_k_gap},{avg_time:.6f}\n"
         with open(result_file, "a") as f:
             f.write(f"{result}")
         logging.info(f"Elaborazione del file: {file_data} completata.")
