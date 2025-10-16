@@ -28,7 +28,7 @@ def my_euristich(clienti, distanze, domande, capacita, veicoli):
                         logging.debug("min_cliente:", c)
                         logging.debug("Distanza dal cliente corrente:", distanze[c, last_client] if c < last_client else distanze[last_client, c])
                         logging.debug("Carico corrente:", carico_corrente)
-                        if carico_corrente + domande[c] < capacita:
+                        if carico_corrente + domande[c] <= capacita:
                             path[i].append(c)
                             logging.debug("Percorso aggiornato:", path)
                             carico_corrente += domande[c]
@@ -77,7 +77,7 @@ def my_euristich_without_k(clienti, distanze, domande, capacita, veicoli):
                         logging.debug(f"min_cliente: {c}")
                         logging.debug(f"Distanza dal cliente corrente: {distanze[c, last_client] if c < last_client else distanze[last_client, c]}")
                         logging.debug(f"Carico corrente: {carico_corrente}")
-                        if carico_corrente + domande[c] < capacita:
+                        if carico_corrente + domande[c] <= capacita:
                             path[i].append(c)
                             logging.debug(f"Percorso aggiornato: {path}")
                             carico_corrente += domande[c]
@@ -103,7 +103,7 @@ def my_euristich_without_k(clienti, distanze, domande, capacita, veicoli):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    num_experiments = 3
+    num_experiments = 1
     max_processing_time = 300  # secondi
     dir_path = "benchmarks/Vrp-Set-XML100/instances/"
     pattern = os.path.join(dir_path, "*.vrp")
@@ -111,11 +111,11 @@ if __name__ == "__main__":
     logging.debug(f"Found {len(all_files)} files matching the pattern.")
     # ordino i file per nome
     all_files.sort()
-    result_file = "results/my-euristich-results-XML100.csv"
+    result_file = "results/my-euristich-results-XML100_v2.csv"
     with open(result_file, "w") as f:
         f.write("Method,Instance,N,Optimal_K,Euristich_K,Q,Cost,Optimal_Value,Optimality_Gap(%),Optimality_K_Gap(%),Processing_Time(s)\n")
     # Esempio di dati
-    for file_data in all_files[5345:]:
+    for file_data in all_files[:]:
         logging.info(f"Elaborazione del file: {file_data} in corso...")
 
         dati = extract_data_from_vrp2(file_data)
