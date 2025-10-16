@@ -1,7 +1,7 @@
 from math import atan2
 
 from utils.parser_dat_file import extract_data_from_vrp, extract_data_from_vrp2
-from clarke_euristic import capacity
+from solvers.clarke_heuristic import capacity
 import time
 import logging
 import os

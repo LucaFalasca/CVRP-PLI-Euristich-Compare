@@ -111,7 +111,7 @@ if __name__ == "__main__":
     logging.debug(f"Found {len(all_files)} files matching the pattern.")
     # ordino i file per nome
     all_files.sort()
-    result_file = "results/my-euristich-results-XML100_v2.csv"
+    result_file = "results/my-heuristic-results-XML100.csv"
     with open(result_file, "w") as f:
         f.write("Method,Instance,N,Optimal_K,Euristich_K,Q,Cost,Optimal_Value,Optimality_Gap(%),Optimality_K_Gap(%),Processing_Time(s)\n")
     # Esempio di dati

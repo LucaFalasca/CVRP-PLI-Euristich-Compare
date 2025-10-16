@@ -2,7 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
-from solvers.clarke_euristic import capacity
+from solvers.clarke_heuristic import capacity
 from utils.parser_dat_file import extract_data_from_vrp
 from amplpy import AMPL
 import time

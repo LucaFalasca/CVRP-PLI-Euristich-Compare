@@ -1,6 +1,6 @@
 
 
-from solvers.clarke_euristic import capacity
+from solvers.clarke_heuristic import capacity
 from parser_dat_file import extract_data_from_solution, extract_data_from_vrp
 
 file_data = 'A/A-n33-k5.vrp'
